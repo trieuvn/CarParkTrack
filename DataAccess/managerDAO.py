@@ -1,4 +1,5 @@
 from typing import Optional, List
+from sqlalchemy.orm import Session
 from BusinessObject.models import Manager
 
 class ManagerDAO:
@@ -19,3 +20,18 @@ class ManagerDAO:
     def get_all_managers(self) -> List[Manager]:
         with self.db_context.get_session() as session:
             return session.query(Manager).all()
+
+    def add_manager(self, manager: Manager) -> None:
+        with self.db_context.get_session() as session:
+            session.add(manager)
+            session.commit()
+
+    def update_manager(self, manager: Manager) -> None:
+        with self.db_context.get_session() as session:
+            session.merge(manager)
+            session.commit()
+
+    def delete_manager(self, manager: Manager) -> None:
+        with self.db_context.get_session() as session:
+            session.delete(manager)
+            session.commit()

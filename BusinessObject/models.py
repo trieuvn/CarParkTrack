@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from sqlalchemy import Column, ForeignKeyConstraint, Identity, Index, Integer, LargeBinary, PrimaryKeyConstraint, Table, Unicode
+from sqlalchemy import Column, Float, ForeignKeyConstraint, Identity, Index, Integer, LargeBinary, PrimaryKeyConstraint, Table, Unicode
 from sqlalchemy.dialects.mssql import IMAGE
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -18,6 +18,7 @@ class Manager(Base):
     Password: Mapped[Optional[str]] = mapped_column(Unicode(50, 'SQL_Latin1_General_CP1_CI_AS'))
     Email: Mapped[Optional[str]] = mapped_column(Unicode(30, 'SQL_Latin1_General_CP1_CI_AS'))
     PhoneNumber: Mapped[Optional[str]] = mapped_column(Unicode(15, 'SQL_Latin1_General_CP1_CI_AS'))
+    MainMap: Mapped[Optional[str]] = mapped_column(Unicode(collation='SQL_Latin1_General_CP1_CI_AS'))
 
     Camera: Mapped[List['Camera']] = relationship('Camera', back_populates='Manager1')
     Slot: Mapped[List['Slot']] = relationship('Slot', back_populates='Manager1')
@@ -63,6 +64,7 @@ class Camera(Base):
 
     Manager1: Mapped[Optional['Manager']] = relationship('Manager', back_populates='Camera')
     CameraHaveSlot: Mapped[List['CameraHaveSlot']] = relationship('CameraHaveSlot', back_populates='Camera1')
+    PTS: Mapped[List['PTS']] = relationship('PTS', back_populates='Camera1')
 
 
 class Slot(Base):
@@ -117,6 +119,23 @@ class CameraHaveSlot(Base):
 
     Camera1: Mapped['Camera'] = relationship('Camera', back_populates='CameraHaveSlot')
     Slot1: Mapped['Slot'] = relationship('Slot', back_populates='CameraHaveSlot')
+
+
+class PTS(Base):
+    __tablename__ = 'PTS'
+    __table_args__ = (
+        ForeignKeyConstraint(['Camera'], ['Camera.ID'], name='FK_PTS_Camera'),
+        PrimaryKeyConstraint('ID', name='PK_PTS')
+    )
+
+    ID: Mapped[int] = mapped_column(Integer, Identity(start=1, increment=1), primary_key=True)
+    srcX: Mapped[Optional[float]] = mapped_column(Float(53))
+    srcY: Mapped[Optional[float]] = mapped_column(Float(53))
+    dstX: Mapped[Optional[float]] = mapped_column(Float(53))
+    dstY: Mapped[Optional[float]] = mapped_column(Float(53))
+    Camera_: Mapped[Optional[int]] = mapped_column('Camera', Integer)
+
+    Camera1: Mapped[Optional['Camera']] = relationship('Camera', back_populates='PTS')
 
 
 t_TicketAllowSlot = Table(

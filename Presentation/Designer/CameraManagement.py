@@ -66,11 +66,13 @@ class Ui_CameraManagementView(object):
 
         self.name_edit = QtWidgets.QLineEdit()
         self.val_link_edit = QtWidgets.QLineEdit()
+        self.main_map_edit = QtWidgets.QLineEdit()
         self.picker_button = QtWidgets.QPushButton("Pick Points")
         self.picker_button.setEnabled(True)
 
         self.form_layout.addRow("Name:", self.name_edit)
         self.form_layout.addRow("Validation Link:", self.val_link_edit)
+        self.form_layout.addRow("Main Map:", self.main_map_edit)
         self.form_layout.addRow("Points:", self.picker_button)
 
         self.main_layout.addWidget(self.form_widget)
@@ -84,12 +86,19 @@ class Ui_CameraManagementView(object):
         self.delete_button = QtWidgets.QPushButton("Delete Camera")
         self.clear_button = QtWidgets.QPushButton("Clear Form")
         self.operate_button = QtWidgets.QPushButton("Operate")
+        self.mapping_button = QtWidgets.QPushButton("Mapping")
+        self.delete_pts_button = QtWidgets.QPushButton("Delete PTS")
+        self.clear_pts_points_button = QtWidgets.QPushButton("Clear PTS Points")  # New button
+        self.pts_id_edit = QtWidgets.QLineEdit()
+        self.pts_id_edit.setPlaceholderText("Enter PTS ID to delete")
 
-        # Đảm bảo các nút hiển thị và tương tác được
-        for btn in [self.add_button, self.edit_button, self.delete_button, self.clear_button, self.operate_button]:
+        for btn in [self.add_button, self.edit_button, self.delete_button, self.clear_button,
+                    self.operate_button, self.mapping_button, self.delete_pts_button,
+                    self.clear_pts_points_button]:
             btn.setEnabled(True)
             btn.setVisible(True)
             self.button_layout.addWidget(btn)
+        self.button_layout.addWidget(self.pts_id_edit)
         self.main_layout.addWidget(self.button_widget)
 
         self.table = QtWidgets.QTableWidget()
