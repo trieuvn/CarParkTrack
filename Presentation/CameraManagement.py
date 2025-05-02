@@ -154,9 +154,9 @@ class CameraManagementView(QtWidgets.QMainWindow, Ui_CameraManagementView):
             if self.current_camera_id is None:
                 QMessageBox.warning(self, "Lỗi", "Vui lòng chọn một camera để vận hành!")
                 return
-            video_path, _ = load_camera_data(self.current_camera_id)
+            video_path, _ = load_camera_data(self.current_camera_id, self.manager_username)
             if video_path:
-                process_video(video_path, self.current_camera_id)
+                process_video(video_path, self.current_camera_id, self.manager_username)
             else:
                 QMessageBox.critical(self, "Lỗi", "Không có đường dẫn video hợp lệ để xử lý!")
         except Exception as e:
