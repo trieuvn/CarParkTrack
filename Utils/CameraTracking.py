@@ -288,7 +288,7 @@ def process_video(video_path, camera_id, manager_username):
             continue
 
         try:
-            results = model.track(frame, persist=True)
+            results = model.track(frame, tracker="botsort.yaml" ,persist=True)
         except Exception as e:
             print(f"Error during tracking (frame {frame_count}): {e}")
             continue
