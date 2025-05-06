@@ -142,7 +142,7 @@ class CameraManagementView(QtWidgets.QMainWindow, Ui_CameraManagementView):
             if self.current_camera_id is None:
                 QMessageBox.warning(self, "Lỗi", "Vui lòng chọn một camera để chỉnh sửa điểm!")
                 return
-            picker = PointPickerView(self.current_camera_id)
+            picker = PointPickerView(self.manager_username)
             if picker.exec_():
                 self.points = picker.get_points()
                 self.edit_camera()
@@ -154,9 +154,9 @@ class CameraManagementView(QtWidgets.QMainWindow, Ui_CameraManagementView):
             if self.current_camera_id is None:
                 QMessageBox.warning(self, "Lỗi", "Vui lòng chọn một camera để vận hành!")
                 return
-            video_path, _ = load_camera_data(self.current_camera_id, self.manager_username)
+            video_path, destination_zones, slot_ids = load_camera_data(self.current_camera_id, self.manager_username)
             if video_path:
-                process_video(video_path, self.current_camera_id, self.manager_username)
+                process_video(video_path, self.current_camera_id, self.manager_username, destination_zones, slot_ids)
             else:
                 QMessageBox.critical(self, "Lỗi", "Không có đường dẫn video hợp lệ để xử lý!")
         except Exception as e:

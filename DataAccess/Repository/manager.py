@@ -1,3 +1,4 @@
+import logging
 from DataAccess.Repository.Interface.Imanager import IManagerRepository
 from DataAccess.managerDAO import ManagerDAO
 from typing import Optional, List
@@ -10,8 +11,12 @@ class ManagerRepository(IManagerRepository):
     def authenticate(self, username: str, password: str) -> Optional[Manager]:
         return self.manager_dao.authenticate(username, password)
 
-    def get_manager_by_username(self, username: str) -> Optional[Manager]:
-        return self.manager_dao.get_manager_by_username(username)
+    def get_manager_by_username(self, username: str) -> Manager:
+        try:
+            return self.manager_dao.get_manager_by_username(username)
+        except Exception as e:
+            logging.error(f"Error in get_manager_by_username: {str(e)}")
+            raise
 
     def get_all_managers(self) -> List[Manager]:
         return self.manager_dao.get_all_managers()

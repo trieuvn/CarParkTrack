@@ -11,6 +11,7 @@ def run_homography(camera_id: int, val_link: str, main_map: str, db_context: DBC
     dst_x, dst_y = -1, -1
     src_list = []
     dst_list = []
+    selected_idx = -1  # Chỉ số của điểm đang chọn để chỉnh sửa/xóa
     pts_repo = PTSRepository(db_context)
 
     # Helper function to check if a file is a video
@@ -26,13 +27,15 @@ def run_homography(camera_id: int, val_link: str, main_map: str, db_context: DBC
             if not cap.isOpened():
                 raise ValueError(f"Cannot open video file from {val_link}")
             ret, src = cap.read()
-            cap.release()
             if not ret:
                 raise ValueError(f"Cannot read first frame from video {val_link}")
+            cap.release()
         else:
             src = cv.imread(val_link, -1)
             if src is None:
                 raise ValueError(f"Cannot load image from {val_link}")
+        if src.shape[0] <= 0 or src.shape[1] <= 0:
+            raise ValueError(f"Invalid source image dimensions: {src.shape}")
         src_copy = src.copy()
         print("Source image/video loaded successfully")
     except Exception as e:
@@ -45,11 +48,17 @@ def run_homography(camera_id: int, val_link: str, main_map: str, db_context: DBC
         dst = cv.imread(main_map, -1)
         if dst is None:
             raise ValueError(f"Cannot load destination image from {main_map}")
+        if dst.shape[0] <= 0 or dst.shape[1] <= 0:
+            raise ValueError(f"Invalid destination image dimensions: {dst.shape}")
         dst_copy = dst.copy()
         print("Destination image loaded successfully")
     except Exception as e:
         print(f"Error loading destination image: {str(e)}")
         raise
+
+    # Kiểm tra kích thước tương thích
+    if src.shape[1] != dst.shape[1] or src.shape[0] != dst.shape[0]:
+        print(f"Warning: Source ({src.shape}) and destination ({dst.shape}) dimensions differ. Homography may fail.")
 
     # Load existing PTS points for the camera
     try:
@@ -59,15 +68,13 @@ def run_homography(camera_id: int, val_link: str, main_map: str, db_context: DBC
             if all(attr is not None for attr in [pts.srcX, pts.srcY, pts.dstX, pts.dstY]):
                 src_point = [float(pts.srcX), float(pts.srcY)]
                 dst_point = [float(pts.dstX), float(pts.dstY)]
-                # Validate point format
-                if len(src_point) == 2 and len(dst_point) == 2:
+                if len(src_point) == 2 and len(dst_point) == 2 and 0 <= src_point[0] < src.shape[1] and 0 <= src_point[1] < src.shape[0] and 0 <= dst_point[0] < dst.shape[1] and 0 <= dst_point[1] < dst.shape[0]:
                     src_list.append(src_point)
                     dst_list.append(dst_point)
-                    # Draw saved points in green
                     cv.circle(src_copy, (int(pts.srcX), int(pts.srcY)), 5, (0, 255, 0), -1)
                     cv.circle(dst_copy, (int(pts.dstX), int(pts.dstY)), 5, (0, 255, 0), -1)
                 else:
-                    print(f"Invalid PTS point for camera {camera_id}: src={src_point}, dst={dst_point}")
+                    print(f"Invalid or out-of-bounds PTS point for camera {camera_id}: src={src_point}, dst={dst_point}")
         print(f"Loaded {len(src_list)} PTS points for camera {camera_id}")
         print("src points:", src_list)
         print("dst points:", dst_list)
@@ -77,22 +84,38 @@ def run_homography(camera_id: int, val_link: str, main_map: str, db_context: DBC
 
     # Mouse callback functions
     def select_points_src(event, x, y, flags, param):
-        nonlocal src_x, src_y, drawing
+        nonlocal src_x, src_y, drawing, selected_idx
         print(f"Mouse event on src: event={event}, x={x}, y={y}")
         if event == cv.EVENT_LBUTTONDOWN:
             drawing = True
             src_x, src_y = x, y
-            cv.circle(src_copy, (x, y), 5, (0, 0, 255), -1)
+            # Kiểm tra xem có chọn lại điểm cũ không
+            for i, (sx, sy) in enumerate(src_list):
+                if abs(sx - x) < 10 and abs(sy - y) < 10:
+                    selected_idx = i
+                    print(f"Selected existing point at index {i}")
+                    break
+            else:
+                selected_idx = -1
+                cv.circle(src_copy, (x, y), 5, (0, 0, 255), -1)
         elif event == cv.EVENT_LBUTTONUP:
             drawing = False
 
     def select_points_dst(event, x, y, flags, param):
-        nonlocal dst_x, dst_y, drawing
+        nonlocal dst_x, dst_y, drawing, selected_idx
         print(f"Mouse event on dst: event={event}, x={x}, y={y}")
         if event == cv.EVENT_LBUTTONDOWN:
             drawing = True
             dst_x, dst_y = x, y
-            cv.circle(dst_copy, (x, y), 5, (0, 0, 255), -1)
+            # Kiểm tra xem có chọn lại điểm cũ không
+            for i, (dx, dy) in enumerate(dst_list):
+                if abs(dx - x) < 10 and abs(dy - y) < 10:
+                    selected_idx = i
+                    print(f"Selected existing point at index {i}")
+                    break
+            else:
+                selected_idx = -1
+                cv.circle(dst_copy, (x, y), 5, (0, 0, 255), -1)
         elif event == cv.EVENT_LBUTTONUP:
             drawing = False
 
@@ -100,16 +123,11 @@ def run_homography(camera_id: int, val_link: str, main_map: str, db_context: DBC
         print("Entering get_plan_view")
         if len(src_list) < 4 or len(dst_list) < 4:
             print("Error: At least 4 point pairs are required for homography")
-            return None
+            return None, None
         if len(src_list) != len(dst_list):
             print(f"Error: Mismatched point counts (src: {len(src_list)}, dst: {len(dst_list)})")
-            return None
+            return None, None
         try:
-            # Validate each point
-            for i, (src_pt, dst_pt) in enumerate(zip(src_list, dst_list)):
-                if len(src_pt) != 2 or len(dst_pt) != 2:
-                    print(f"Error: Invalid point pair at index {i}: src={src_pt}, dst={dst_pt}")
-                    return None
             src_pts = np.array(src_list, dtype=np.float32).reshape(-1, 1, 2)
             dst_pts = np.array(dst_list, dtype=np.float32).reshape(-1, 1, 2)
             print("src_pts:", src_pts)
@@ -117,19 +135,19 @@ def run_homography(camera_id: int, val_link: str, main_map: str, db_context: DBC
             H, mask = cv.findHomography(src_pts, dst_pts, cv.RANSAC, 5.0)
             if H is None:
                 print("Error: Homography calculation failed")
-                return None
-            print("H:")
+                return None, None
+            print("Homography matrix:")
             print(H)
             plan_view = cv.warpPerspective(src, H, (dst.shape[1], dst.shape[0]))
             print("Plan view generated successfully")
-            return plan_view
+            return plan_view, H
         except Exception as e:
             print(f"Error in get_plan_view: {str(e)}")
-            return None
+            return None, None
 
     def merge_views(src, dst):
         print("Entering merge_views")
-        plan_view = get_plan_view(src, dst)
+        plan_view, _ = get_plan_view(src, dst)  # Sửa ở đây để unpack đúng 2 giá trị
         if plan_view is None:
             print("Cannot merge views: Plan view generation failed")
             return None
@@ -164,17 +182,22 @@ def run_homography(camera_id: int, val_link: str, main_map: str, db_context: DBC
                     print("Please select both src and dst points before saving")
                     continue
                 print(f"Selected points: src=({src_x}, {src_y}), dst=({dst_x}, {dst_y})")
-                cv.circle(src_copy, (src_x, src_y), 5, (0, 255, 0), -1)
-                cv.circle(dst_copy, (dst_x, dst_y), 5, (0, 255, 0), -1)
-                src_point = [float(src_x), float(src_y)]
-                dst_point = [float(dst_x), float(dst_y)]
-                src_list.append(src_point)
-                dst_list.append(dst_point)
-                print("src points:", src_list)
-                print("dst points:", dst_list)
-
-                # Save to PTS table
-                try:
+                if selected_idx >= 0:
+                    # Cập nhật điểm hiện có
+                    src_list[selected_idx] = [float(src_x), float(src_y)]
+                    dst_list[selected_idx] = [float(dst_x), float(dst_y)]
+                    # Cập nhật trong database
+                    pts = pts_repo.get_pts_by_camera_id(camera_id)[selected_idx]
+                    pts.srcX = float(src_x)
+                    pts.srcY = float(src_y)
+                    pts.dstX = float(dst_x)
+                    pts.dstY = float(dst_y)
+                    pts_repo.update_pts(pts)
+                    print(f"Updated PTS at index {selected_idx}")
+                else:
+                    # Thêm điểm mới
+                    src_list.append([float(src_x), float(src_y)])
+                    dst_list.append([float(dst_x), float(dst_y)])
                     pts = PTS(
                         srcX=float(src_x),
                         srcY=float(src_y),
@@ -182,19 +205,40 @@ def run_homography(camera_id: int, val_link: str, main_map: str, db_context: DBC
                         dstY=float(dst_y),
                         Camera_=camera_id
                     )
-                    print("Saving PTS to database")
                     pts_repo.add_pts(pts)
-                    print(f"Saved PTS for camera {camera_id}: ({src_x}, {src_y}) -> ({dst_x}, {dst_y})")
-                except Exception as e:
-                    print(f"Error saving PTS: {str(e)}")
-                src_x, src_y, dst_x, dst_y = -1, -1, -1, -1  # Reset points after saving
+                    print(f"Saved new PTS for camera {camera_id}")
+                # Vẽ lại điểm đã lưu
+                cv.circle(src_copy, (src_x, src_y), 5, (0, 255, 0), -1)
+                cv.circle(dst_copy, (dst_x, dst_y), 5, (0, 255, 0), -1)
+                src_x, src_y, dst_x, dst_y = -1, -1, -1, -1
+                selected_idx = -1
                 print("Points saved and reset")
+
+            elif k == ord('d'):
+                print('Deleting selected point')
+                if selected_idx >= 0 and selected_idx < len(src_list):
+                    pts = pts_repo.get_pts_by_camera_id(camera_id)[selected_idx]
+                    pts_repo.delete_pts(pts.ID)
+                    del src_list[selected_idx]
+                    del dst_list[selected_idx]
+                    src_copy = src.copy()
+                    dst_copy = dst.copy()
+                    for sx, sy in src_list:
+                        cv.circle(src_copy, (int(sx), int(sy)), 5, (0, 255, 0), -1)
+                    for dx, dy in dst_list:
+                        cv.circle(dst_copy, (int(dx), int(dy)), 5, (0, 255, 0), -1)
+                    selected_idx = -1
+                    print(f"Deleted point at index {selected_idx}")
+                else:
+                    print("No point selected to delete")
 
             elif k == ord('h'):
                 print('Creating plan view')
-                plan_view = get_plan_view(src, dst)
+                plan_view, H = get_plan_view(src, dst)
                 if plan_view is not None:
                     cv.imshow("plan view", plan_view)
+                    print("Homography matrix saved in memory for use")
+
             elif k == ord('m'):
                 print('Merging views')
                 merge = merge_views(src, dst)
