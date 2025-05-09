@@ -8,7 +8,7 @@ class Ui_LoginView(object):
         MainWindow.setStyleSheet("""
         QMainWindow {
             
-            border-image: url("C:/Users/Phuc/Downloads/lineEdit/static/100000.jpg") 12 12 12 12 stretch stretch;
+            border-image: url("static/100000.jpg") 12 12 12 12 stretch stretch;
             background-color: #f0f0f0;
         }
         #widget {
