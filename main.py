@@ -8,7 +8,7 @@ def main():
     from PyQt5.QtWidgets import QApplication
     app = QApplication(sys.argv)
     login = LoginView()
-    login.show()
+    login.showMaximized()
     sys.exit(app.exec_())
 
 if __name__ == "__main__":
