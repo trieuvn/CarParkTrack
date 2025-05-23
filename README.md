@@ -12,7 +12,6 @@ Hệ thống quản lý bãi đỗ xe thông minh là một ứng dụng hỗ tr
 - Theo dõi chuyển động của phương tiện sử dụng thuật toán BoT-SORT.
 - Ánh xạ không gian bãi đỗ xe bằng kỹ thuật Homography để xác định vị trí trống.
 - Giao diện người dùng thân thiện được phát triển bằng Qt6.
-- Lưu trữ thông tin phương tiện (biển số, thời gian đỗ) trong cơ sở dữ liệu MS SQL Server.
 
 Dự án phù hợp cho các bãi đỗ xe tại trung tâm thương mại, tòa nhà văn phòng, hoặc khu dân cư.
 
@@ -97,7 +96,6 @@ pip install -r requirements.txt
    - Giao diện Qt6 hiển thị luồng video từ camera hoặc file video.
    - Các phương tiện được nhận diện và theo dõi, với khung bao (bounding box) và ID.
    - Vị trí đỗ xe trống được đánh dấu trên giao diện.
-   - Thông tin phương tiện (biển số, thời gian đỗ) được lưu vào cơ sở dữ liệu.
 
 ---
 
