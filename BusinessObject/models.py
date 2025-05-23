@@ -18,9 +18,10 @@ class Manager(Base):
     Password: Mapped[Optional[str]] = mapped_column(Unicode(50, 'SQL_Latin1_General_CP1_CI_AS'))
     Email: Mapped[Optional[str]] = mapped_column(Unicode(30, 'SQL_Latin1_General_CP1_CI_AS'))
     PhoneNumber: Mapped[Optional[str]] = mapped_column(Unicode(15, 'SQL_Latin1_General_CP1_CI_AS'))
-    MainMap: Mapped[Optional[str]] = mapped_column(Unicode(collation='SQL_Latin1_General_CP1_CI_AS'))
+    MainMap: Mapped[Optional[str]] = mapped_column(Unicode(100, 'SQL_Latin1_General_CP1_CI_AS'))
 
     Camera: Mapped[List['Camera']] = relationship('Camera', back_populates='Manager1')
+    CheckIn: Mapped[List['CheckIn']] = relationship('CheckIn', back_populates='Manager1')
     Slot: Mapped[List['Slot']] = relationship('Slot', back_populates='Manager1')
     Ticket: Mapped[List['Ticket']] = relationship('Ticket', back_populates='Manager1')
 
@@ -50,7 +51,7 @@ class Camera(Base):
     Name: Mapped[Optional[str]] = mapped_column(Unicode(50, 'SQL_Latin1_General_CP1_CI_AS'))
     BasePicture: Mapped[Optional[bytes]] = mapped_column(IMAGE)
     ValVideo: Mapped[Optional[bytes]] = mapped_column(IMAGE)
-    ValLink: Mapped[Optional[str]] = mapped_column(Unicode(collation='SQL_Latin1_General_CP1_CI_AS'))
+    ValLink: Mapped[Optional[str]] = mapped_column(Unicode(100, 'SQL_Latin1_General_CP1_CI_AS'))
     CheckInLoc: Mapped[Optional[int]] = mapped_column(Integer)
     d1x: Mapped[Optional[int]] = mapped_column(Integer)
     d1y: Mapped[Optional[int]] = mapped_column(Integer)
@@ -67,6 +68,28 @@ class Camera(Base):
     PTS: Mapped[List['PTS']] = relationship('PTS', back_populates='Camera1')
 
 
+class CheckIn(Base):
+    __tablename__ = 'CheckIn'
+    __table_args__ = (
+        ForeignKeyConstraint(['Manager'], ['Manager.UserName'], name='FK_CheckIn_Manager'),
+        PrimaryKeyConstraint('ID', name='PK_CheckIn')
+    )
+
+    ID: Mapped[int] = mapped_column(Integer, Identity(start=1, increment=1), primary_key=True)
+    Name: Mapped[Optional[str]] = mapped_column(Unicode(50, 'SQL_Latin1_General_CP1_CI_AS'))
+    d1x: Mapped[Optional[int]] = mapped_column(Integer)
+    d1y: Mapped[Optional[int]] = mapped_column(Integer)
+    d2x: Mapped[Optional[int]] = mapped_column(Integer)
+    d2y: Mapped[Optional[int]] = mapped_column(Integer)
+    d3x: Mapped[Optional[int]] = mapped_column(Integer)
+    d3y: Mapped[Optional[int]] = mapped_column(Integer)
+    d4x: Mapped[Optional[int]] = mapped_column(Integer)
+    d4y: Mapped[Optional[int]] = mapped_column(Integer)
+    Manager_: Mapped[Optional[str]] = mapped_column('Manager', Unicode(50, 'SQL_Latin1_General_CP1_CI_AS'))
+
+    Manager1: Mapped[Optional['Manager']] = relationship('Manager', back_populates='CheckIn')
+
+
 class Slot(Base):
     __tablename__ = 'Slot'
     __table_args__ = (
@@ -77,6 +100,14 @@ class Slot(Base):
     ID: Mapped[int] = mapped_column(Integer, Identity(start=1, increment=1), primary_key=True)
     Name: Mapped[Optional[str]] = mapped_column(Unicode(50, 'SQL_Latin1_General_CP1_CI_AS'))
     Manager_: Mapped[Optional[str]] = mapped_column('Manager', Unicode(50, 'SQL_Latin1_General_CP1_CI_AS'))
+    d1x: Mapped[Optional[int]] = mapped_column(Integer)
+    d1y: Mapped[Optional[int]] = mapped_column(Integer)
+    d2x: Mapped[Optional[int]] = mapped_column(Integer)
+    d2y: Mapped[Optional[int]] = mapped_column(Integer)
+    d3x: Mapped[Optional[int]] = mapped_column(Integer)
+    d3y: Mapped[Optional[int]] = mapped_column(Integer)
+    d4x: Mapped[Optional[int]] = mapped_column(Integer)
+    d4y: Mapped[Optional[int]] = mapped_column(Integer)
 
     Manager1: Mapped[Optional['Manager']] = relationship('Manager', back_populates='Slot')
     Ticket: Mapped[List['Ticket']] = relationship('Ticket', secondary='TicketAllowSlot', back_populates='Slot_')

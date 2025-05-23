@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QHeaderView
 class Ui_CameraManagementView(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("CameraManagement")
-        MainWindow.resize(1000, 700)
+        MainWindow.showMaximized()
         MainWindow.setStyleSheet("""
             QWidget {
                 background-color: rgba(255, 255, 255, 255);
