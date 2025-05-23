@@ -1,10 +1,10 @@
-# data_access/db_context.py
+import database
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from BusinessObject.models import Base
 
 class DBContext:
-    def __init__(self, db_url="mssql+pyodbc://@DESKTOP-M0KCUVC/CarPark?driver=ODBC+Driver+17+for+SQL+Server&Trusted_Connection=yes"):
+    def __init__(self, db_url="mssql+pyodbc://@"+database.server+"/CarPark?driver=ODBC+Driver+17+for+SQL+Server&Trusted_Connection=yes"):
         self.engine = create_engine(db_url)
         Base.metadata.create_all(self.engine)
         self.Session = sessionmaker(bind=self.engine)
