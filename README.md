@@ -99,7 +99,7 @@ pip install -r requirements.txt
 
 ---
 
-## V. Yêu cầu hệ thống
+## IV. Yêu cầu hệ thống
 
 | Thành phần | Yêu cầu tối thiểu | Yêu cầu khuyến nghị |
 | --- | --- | --- |
@@ -113,12 +113,12 @@ pip install -r requirements.txt
 
 ---
 
-## VII. Liên hệ và đóng góp
+## V. Liên hệ và đóng góp
 
 Nếu bạn có thắc mắc, đề xuất cải tiến, hoặc muốn đóng góp vào dự án, vui lòng:
 
 - **Liên hệ**:
-  - Email: trieunn22@uef.edu.vn.
+  - Email: trieu123ok@gmail.com.
   - GitHub: trieuvn.
 
 ---
